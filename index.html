@@ -93,6 +93,16 @@
 
   <h1>Contact List</h1>
 
+  <!-- ── Search Box ── -->
+  <input
+    type="text"
+    id="search"
+    placeholder="Search contacts..."
+    oninput="filterContacts()"
+    style="width:100%; padding:8px 10px; margin-bottom:16px; font-size:14px;
+           border:1px solid #ccc; border-radius:4px; box-sizing:border-box;"
+  />
+
   <!-- ── Add / Edit Form ── -->
   <form id="contact-form">
     <input type="text"  id="input-name"  placeholder="Name (required)" />
@@ -234,6 +244,15 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    // Filter visible contacts based on the search box.
+    function filterContacts() {
+      const query = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('.contact-card').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(query) ? 'flex' : 'none';
+      });
     }
 
     // Escape single quotes for inline onclick strings.
