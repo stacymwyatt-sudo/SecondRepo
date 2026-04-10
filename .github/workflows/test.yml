@@ -1,0 +1,33 @@
+# .github/workflows/test.yml
+# This file tells GitHub to run your tests automatically
+# every time you push code or open a pull request.
+
+name: Run Tests
+
+on:
+  push:        # run when you push any branch
+  pull_request: # run when you open a pull request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # GitHub runs this on a fresh Linux machine
+
+    steps:
+      # Step 1: Download your code onto the GitHub machine
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Step 3: Install your dependencies (express, jest, etc.)
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Run your tests
+      - name: Run tests
+        run: npm test
