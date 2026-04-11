@@ -93,7 +93,7 @@ jobs:
         if: always() && github.event_name != 'pull_request'
         run: |
           mkdir -p site
-          cp dashboard.html site/
+          cp dashboard.html site/index.html
           cp test-history.json site/
 
       # Upload the site/ folder as a Pages artifact for the deploy job to use
