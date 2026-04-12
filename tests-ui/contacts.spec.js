@@ -37,7 +37,7 @@ test('user can add a new contact and see it in the list', async ({ page }) => {
   // Find each field by the placeholder text the user sees
   await page.getByPlaceholder('Name (required)').fill('Ada Lovelace');
   await page.getByPlaceholder('Email').fill('ada@example.com');
-  await page.getByPlaceholder('Phone').fill('555-1234');
+  await page.getByPlaceholder('Phone (required)').fill('8325551234');
 
   // Find the button by its visible label
   await page.getByRole('button', { name: 'Add Contact' }).click();
@@ -54,6 +54,8 @@ test('user can delete a contact', async ({ page }) => {
 
   // Add a contact first so we have something to delete
   await page.getByPlaceholder('Name (required)').fill('To Be Deleted');
+  await page.getByPlaceholder('Email (required)').fill('delete@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550001');
   await page.getByRole('button', { name: 'Add Contact' }).click();
   await expect(page.locator('.contact-card')).toBeVisible();
 
@@ -72,6 +74,8 @@ test('user can edit a contact', async ({ page }) => {
 
   // Add a contact to edit
   await page.getByPlaceholder('Name (required)').fill('Original Name');
+  await page.getByPlaceholder('Email (required)').fill('original@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550002');
   await page.getByRole('button', { name: 'Add Contact' }).click();
   await expect(page.locator('.contact-card')).toBeVisible();
 
@@ -95,8 +99,12 @@ test('search box filters the contact list', async ({ page }) => {
 
   // Add two contacts
   await page.getByPlaceholder('Name (required)').fill('Alice Smith');
+  await page.getByPlaceholder('Email (required)').fill('alice@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550003');
   await page.getByRole('button', { name: 'Add Contact' }).click();
   await page.getByPlaceholder('Name (required)').fill('Bob Jones');
+  await page.getByPlaceholder('Email (required)').fill('bob@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550004');
   await page.getByRole('button', { name: 'Add Contact' }).click();
 
   // Wait for both cards to appear

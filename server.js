@@ -29,6 +29,14 @@ function getDb() {
   return app.locals.db || db;
 }
 
+// Helper: strips all non-digit characters from a phone number and reformats
+// as (XXX) XXX-XXXX. Returns null if the result isn't exactly 10 digits.
+function formatPhone(raw) {
+  const digits = String(raw).replace(/\D/g, ''); // keep only 0-9
+  if (digits.length !== 10) return null;
+  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+}
+
 // ── Middleware ──────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
@@ -47,10 +55,20 @@ app.post('/contacts', (req, res) => {
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
   }
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+  if (!phone) {
+    return res.status(400).json({ error: 'Phone is required' });
+  }
+  const formattedPhone = formatPhone(phone);
+  if (!formattedPhone) {
+    return res.status(400).json({ error: 'Phone must be a 10-digit US number' });
+  }
   const result = getDb().prepare(
     'INSERT INTO contacts (name, email, phone) VALUES (?, ?, ?)'
-  ).run(name, email || '', phone || '');
-  res.json({ id: result.lastInsertRowid, name, email: email || '', phone: phone || '' });
+  ).run(name, email, formattedPhone);
+  res.json({ id: result.lastInsertRowid, name, email, phone: formattedPhone });
 });
 
 // PUT /contacts/:id — update an existing contact
@@ -59,10 +77,20 @@ app.put('/contacts/:id', (req, res) => {
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
   }
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+  if (!phone) {
+    return res.status(400).json({ error: 'Phone is required' });
+  }
+  const formattedPhone = formatPhone(phone);
+  if (!formattedPhone) {
+    return res.status(400).json({ error: 'Phone must be a 10-digit US number' });
+  }
   getDb().prepare(
     'UPDATE contacts SET name = ?, email = ?, phone = ? WHERE id = ?'
-  ).run(name, email || '', phone || '', req.params.id);
-  res.json({ id: Number(req.params.id), name, email: email || '', phone: phone || '' });
+  ).run(name, email, formattedPhone, req.params.id);
+  res.json({ id: Number(req.params.id), name, email, phone: formattedPhone });
 });
 
 // DELETE /contacts/:id — delete a contact

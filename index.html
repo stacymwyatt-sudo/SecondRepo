@@ -106,8 +106,9 @@
   <!-- ── Add / Edit Form ── -->
   <form id="contact-form">
     <input type="text"  id="input-name"  placeholder="Name (required)" />
-    <input type="email" id="input-email" placeholder="Email" />
-    <input type="tel"   id="input-phone" placeholder="Phone" />
+    <input type="email" id="input-email" placeholder="Email (required)" />
+    <input type="tel"   id="input-phone" placeholder="Phone (required)" />
+    <p id="form-error" style="color:#e74c3c; font-size:13px; margin: -4px 0 8px 0; display:none;"></p>
     <button type="submit" id="submit-btn">Add Contact</button>
     <button type="button" id="cancel-btn" style="display:none">Cancel</button>
   </form>
@@ -133,26 +134,51 @@
       const email = document.getElementById('input-email').value.trim();
       const phone = document.getElementById('input-phone').value.trim();
 
+      // Clear any previous error
+      showError('');
+
       if (!name) {
-        alert('Name is required.');
+        showError('Name is required.');
         return;
       }
 
+      if (!email) {
+        showError('Email is required.');
+        return;
+      }
+
+      if (!phone) {
+        showError('Phone is required.');
+        return;
+      }
+
+      let res;
       if (editingId !== null) {
         // Update existing contact
-        await fetch(`/contacts/${editingId}`, {
+        res = await fetch(`/contacts/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, phone })
         });
-        cancelEdit();
       } else {
         // Add new contact
-        await fetch('/contacts', {
+        res = await fetch('/contacts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, phone })
         });
+      }
+
+      // If the server rejected the request, show the error message
+      if (!res.ok) {
+        const data = await res.json();
+        showError(data.error || 'Something went wrong.');
+        return;
+      }
+
+      if (editingId !== null) {
+        cancelEdit();
+      } else {
         clearForm();
       }
 
@@ -258,6 +284,13 @@
     // Escape single quotes for inline onclick strings.
     function escapeJs(str) {
       return String(str).replace(/'/g, "\\'");
+    }
+
+    // Show or hide the error message below the form.
+    function showError(msg) {
+      const el = document.getElementById('form-error');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
     }
   </script>
 
