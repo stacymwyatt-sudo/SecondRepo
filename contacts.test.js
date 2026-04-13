@@ -76,7 +76,7 @@ describe('POST /contacts', () => {
     const res = await request(app)
       .post('/contacts')
       .send({ name: 'Jane Smith', email: 'jane@test.com', phone: '8325551234' });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.body.name).toBe('Jane Smith');
     expect(res.body.email).toBe('jane@test.com');
     expect(res.body.phone).toBe('(832) 555-1234');
@@ -127,7 +127,7 @@ describe('POST /contacts', () => {
     const res = await request(app)
       .post('/contacts')
       .send({ name: 'Matt', email: 'matt@test.com', phone: '832-555-1234' });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.body.phone).toBe('(832) 555-1234');
   });
 
@@ -135,7 +135,7 @@ describe('POST /contacts', () => {
     const res = await request(app)
       .post('/contacts')
       .send({ name: 'Melody', email: 'melody@test.com', phone: '(832) 555-1234' });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.body.phone).toBe('(832) 555-1234');
   });
 
