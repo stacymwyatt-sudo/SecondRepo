@@ -68,7 +68,7 @@ app.post('/contacts', (req, res) => {
   const result = getDb().prepare(
     'INSERT INTO contacts (name, email, phone) VALUES (?, ?, ?)'
   ).run(name, email, formattedPhone);
-  res.json({ id: result.lastInsertRowid, name, email, phone: formattedPhone });
+  res.status(201).json({ id: result.lastInsertRowid, name, email, phone: formattedPhone });
 });
 
 // PUT /contacts/:id — update an existing contact
