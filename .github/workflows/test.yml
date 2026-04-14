@@ -88,6 +88,16 @@ jobs:
         if: always() && github.event_name != 'pull_request'
         run: node save-results.js
 
+      # Commit the updated test-history.json back to the repo so history accumulates
+      - name: Commit updated test history
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add test-history.json
+          git diff --cached --quiet || git commit -m "chore: update test history [skip ci]"
+          git push
+
       # Bundle dashboard.html and test-history.json into a site/ folder for Pages
       - name: Prepare Pages site
         if: always() && github.event_name != 'pull_request'
