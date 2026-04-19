@@ -93,7 +93,70 @@ test('user can edit a contact', async ({ page }) => {
   await expect(page.locator('.contact-card')).not.toContainText('Original Name');
 });
 
-// ── Test 5: Search filters contacts ─────────────────────────────────────────
+// ── Test 5: Add a contact with a birthday ──────────────────────────────────
+test('user can add a contact with a birthday and see it on the card', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByPlaceholder('Name (required)').fill('Birthday Person');
+  await page.getByPlaceholder('Email (required)').fill('bday@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550005');
+  await page.getByPlaceholder('Birthday mm/dd (optional)').fill('04/18');
+  await page.getByRole('button', { name: 'Add Contact' }).click();
+
+  // The card should include the birthday line
+  await expect(page.locator('.contact-card')).toContainText('Birthday: 04/18');
+});
+
+// ── Test 6: Contact without birthday hides the line ─────────────────────────
+test('contact card omits the birthday line when no birthday is set', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByPlaceholder('Name (required)').fill('No Birthday');
+  await page.getByPlaceholder('Email (required)').fill('none@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550006');
+  await page.getByRole('button', { name: 'Add Contact' }).click();
+
+  await expect(page.locator('.contact-card')).toBeVisible();
+  // No 'Birthday:' text should appear on the card
+  await expect(page.locator('.contact-card')).not.toContainText('Birthday:');
+});
+
+// ── Test 7: Invalid birthday format shows an error ──────────────────────────
+test('invalid birthday format shows an error and no contact is added', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByPlaceholder('Name (required)').fill('Bad Bday');
+  await page.getByPlaceholder('Email (required)').fill('bad@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550007');
+  await page.getByPlaceholder('Birthday mm/dd (optional)').fill('13/45');
+  await page.getByRole('button', { name: 'Add Contact' }).click();
+
+  // The form error should be visible
+  await expect(page.locator('#form-error')).toContainText('Birthday must be in mm/dd format');
+  // No card should have been added
+  await expect(page.locator('.contact-card')).toHaveCount(0);
+});
+
+// ── Test 8: Edit a contact to add a birthday ────────────────────────────────
+test('user can edit a contact to add a birthday', async ({ page }) => {
+  await page.goto('/');
+
+  // Add a contact without a birthday
+  await page.getByPlaceholder('Name (required)').fill('Add Bday Later');
+  await page.getByPlaceholder('Email (required)').fill('later@example.com');
+  await page.getByPlaceholder('Phone (required)').fill('8325550008');
+  await page.getByRole('button', { name: 'Add Contact' }).click();
+  await expect(page.locator('.contact-card')).toBeVisible();
+
+  // Edit it to add a birthday
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await page.getByPlaceholder('Birthday mm/dd (optional)').fill('07/04');
+  await page.getByRole('button', { name: 'Save Changes' }).click();
+
+  await expect(page.locator('.contact-card')).toContainText('Birthday: 07/04');
+});
+
+// ── Test 9: Search filters contacts ─────────────────────────────────────────
 test('search box filters the contact list', async ({ page }) => {
   await page.goto('/');
 

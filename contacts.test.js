@@ -19,10 +19,11 @@ beforeAll(() => {
   db = new Database(':memory:');
   db.exec(`
     CREATE TABLE IF NOT EXISTS contacts (
-      id    INTEGER PRIMARY KEY AUTOINCREMENT,
-      name  TEXT    NOT NULL,
-      email TEXT    NOT NULL DEFAULT '',
-      phone TEXT    NOT NULL DEFAULT ''
+      id       INTEGER PRIMARY KEY AUTOINCREMENT,
+      name     TEXT    NOT NULL,
+      email    TEXT    NOT NULL DEFAULT '',
+      phone    TEXT    NOT NULL DEFAULT '',
+      birthday TEXT    NOT NULL DEFAULT ''
     )
   `);
   // Replace the app's real database with the test one.
@@ -139,6 +140,71 @@ describe('POST /contacts', () => {
     expect(res.body.phone).toBe('(832) 555-1234');
   });
 
+  // ── Birthday field (optional, mm/dd format) ──
+  test('accepts a valid birthday in mm/dd format', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Bday User', email: 'b@test.com', phone: '8325550000', birthday: '04/18' });
+    expect(res.status).toBe(201);
+    expect(res.body.birthday).toBe('04/18');
+  });
+
+  test('accepts a contact with no birthday (optional field)', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'No Bday', email: 'nb@test.com', phone: '8325550000' });
+    expect(res.status).toBe(201);
+    expect(res.body.birthday).toBe('');
+  });
+
+  test('accepts an empty-string birthday', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Empty Bday', email: 'e@test.com', phone: '8325550000', birthday: '' });
+    expect(res.status).toBe(201);
+    expect(res.body.birthday).toBe('');
+  });
+
+  test('returns 400 if birthday is missing the slash', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Bad Bday', email: 'b@test.com', phone: '8325550000', birthday: '0418' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Birthday must be in mm/dd format');
+  });
+
+  test('returns 400 if birthday has an invalid month', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Bad Bday', email: 'b@test.com', phone: '8325550000', birthday: '13/01' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Birthday must be in mm/dd format');
+  });
+
+  test('returns 400 if birthday has an impossible day for the month', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Bad Bday', email: 'b@test.com', phone: '8325550000', birthday: '02/30' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Birthday must be in mm/dd format');
+  });
+
+  test('returns 400 if birthday uses single-digit month', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Bad Bday', email: 'b@test.com', phone: '8325550000', birthday: '4/18' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Birthday must be in mm/dd format');
+  });
+
+  test('accepts Feb 29 since year is unknown', async () => {
+    const res = await request(app)
+      .post('/contacts')
+      .send({ name: 'Leap', email: 'l@test.com', phone: '8325550000', birthday: '02/29' });
+    expect(res.status).toBe(201);
+    expect(res.body.birthday).toBe('02/29');
+  });
+
 });
 
 // ── PUT /contacts/:id ───────────────────────────────────────────
@@ -180,6 +246,33 @@ describe('PUT /contacts/:id', () => {
       .send({ name: 'Test', email: 'test@test.com', phone: '555' });
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Phone must be a 10-digit US number');
+  });
+
+  test('can update a contact to add a birthday', async () => {
+    const created = await createContact();
+    const res = await request(app)
+      .put(`/contacts/${created.id}`)
+      .send({ name: 'Test', email: 'test@test.com', phone: '8325550000', birthday: '12/25' });
+    expect(res.status).toBe(200);
+    expect(res.body.birthday).toBe('12/25');
+  });
+
+  test('can clear a birthday by sending an empty string', async () => {
+    const created = await createContact({ birthday: '01/15' });
+    const res = await request(app)
+      .put(`/contacts/${created.id}`)
+      .send({ name: 'Test', email: 'test@test.com', phone: '8325550000', birthday: '' });
+    expect(res.status).toBe(200);
+    expect(res.body.birthday).toBe('');
+  });
+
+  test('returns 400 if birthday format is invalid on update', async () => {
+    const created = await createContact();
+    const res = await request(app)
+      .put(`/contacts/${created.id}`)
+      .send({ name: 'Test', email: 'test@test.com', phone: '8325550000', birthday: '13/45' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Birthday must be in mm/dd format');
   });
 
 });

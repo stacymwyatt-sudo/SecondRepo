@@ -105,9 +105,10 @@
 
   <!-- ── Add / Edit Form ── -->
   <form id="contact-form">
-    <input type="text"  id="input-name"  placeholder="Name (required)" />
-    <input type="email" id="input-email" placeholder="Email (required)" />
-    <input type="tel"   id="input-phone" placeholder="Phone (required)" />
+    <input type="text"  id="input-name"     placeholder="Name (required)" />
+    <input type="email" id="input-email"    placeholder="Email (required)" />
+    <input type="tel"   id="input-phone"    placeholder="Phone (required)" />
+    <input type="text"  id="input-birthday" placeholder="Birthday mm/dd (optional)" />
     <p id="form-error" style="color:#e74c3c; font-size:13px; margin: -4px 0 8px 0; display:none;"></p>
     <button type="submit" id="submit-btn">Add Contact</button>
     <button type="button" id="cancel-btn" style="display:none">Cancel</button>
@@ -130,9 +131,10 @@
     document.getElementById('contact-form').addEventListener('submit', async (e) => {
       e.preventDefault(); // stop the page from refreshing
 
-      const name  = document.getElementById('input-name').value.trim();
-      const email = document.getElementById('input-email').value.trim();
-      const phone = document.getElementById('input-phone').value.trim();
+      const name     = document.getElementById('input-name').value.trim();
+      const email    = document.getElementById('input-email').value.trim();
+      const phone    = document.getElementById('input-phone').value.trim();
+      const birthday = document.getElementById('input-birthday').value.trim();
 
       // Clear any previous error
       showError('');
@@ -158,14 +160,14 @@
         res = await fetch(`/contacts/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone })
+          body: JSON.stringify({ name, email, phone, birthday })
         });
       } else {
         // Add new contact
         res = await fetch('/contacts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone })
+          body: JSON.stringify({ name, email, phone, birthday })
         });
       }
 
@@ -215,14 +217,18 @@
       contacts.forEach(contact => {
         const card = document.createElement('div');
         card.className = 'contact-card';
+        const birthdayLine = contact.birthday
+          ? `<span>Birthday: ${escapeHtml(contact.birthday)}</span>`
+          : '';
         card.innerHTML = `
           <div class="contact-info">
             <strong>${escapeHtml(contact.name)}</strong>
             <span>${escapeHtml(contact.email)}</span>
             <span>${escapeHtml(contact.phone)}</span>
+            ${birthdayLine}
           </div>
           <div class="contact-actions">
-            <button class="edit-btn"   onclick="startEdit(${contact.id}, '${escapeJs(contact.name)}', '${escapeJs(contact.email)}', '${escapeJs(contact.phone)}')">Edit</button>
+            <button class="edit-btn"   onclick="startEdit(${contact.id}, '${escapeJs(contact.name)}', '${escapeJs(contact.email)}', '${escapeJs(contact.phone)}', '${escapeJs(contact.birthday || '')}')">Edit</button>
             <button class="delete-btn" onclick="deleteContact(${contact.id})">Delete</button>
           </div>
         `;
@@ -231,11 +237,12 @@
     }
 
     // Fill the form with a contact's data so the user can edit it.
-    function startEdit(id, name, email, phone) {
+    function startEdit(id, name, email, phone, birthday) {
       editingId = id;
-      document.getElementById('input-name').value  = name;
-      document.getElementById('input-email').value = email;
-      document.getElementById('input-phone').value = phone;
+      document.getElementById('input-name').value     = name;
+      document.getElementById('input-email').value    = email;
+      document.getElementById('input-phone').value    = phone;
+      document.getElementById('input-birthday').value = birthday || '';
       document.getElementById('submit-btn').textContent = 'Save Changes';
       document.getElementById('cancel-btn').style.display = 'inline';
       document.getElementById('input-name').focus();
@@ -251,9 +258,10 @@
 
     // Clear all form fields.
     function clearForm() {
-      document.getElementById('input-name').value  = '';
-      document.getElementById('input-email').value = '';
-      document.getElementById('input-phone').value = '';
+      document.getElementById('input-name').value     = '';
+      document.getElementById('input-email').value    = '';
+      document.getElementById('input-phone').value    = '';
+      document.getElementById('input-birthday').value = '';
     }
 
     // Send a delete request to the server, then reload the list.
